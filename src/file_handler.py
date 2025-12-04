@@ -1,6 +1,6 @@
 import re
 from collections import Counter
-
+from .lib import print_table
 
 class FileHandler:
     def __init__(self, filename: str) -> None:
@@ -10,6 +10,7 @@ class FileHandler:
         self.filename = filename
         self.file = open(filename, "r")
         self.word_count = self.__get_word_count()
+        self.line_count = self.__get_line_count()
         self.word_counter = self.__get_word_counter()
 
     def __get_word_counter(self) -> Counter:
@@ -26,21 +27,21 @@ class FileHandler:
             count += len(re.findall(r"[A-Za-z]+", line))
         self.file.seek(0)                 
         return count
+    
+    def __get_line_count(self) -> int:
+        self.file.seek(0)
+        return len(self.file.readlines())
 
-    def print_collection(self) -> None:
+    def print_collection(self) -> None: 
         counts = self.word_counter
+        rows = [(word, count) for word, count in counts.most_common()]
+        print_table(rows, headers=("Word", "Count"))
 
-        max_key_len = max(len(w) for w in counts)
-
-        print(f'{"WORD".ljust(max_key_len)} | COUNT')
-        print('-' * (max_key_len + 8))
-
-        for key, value in counts.most_common():
-            print(f'{key.ljust(max_key_len)} | {value}')
 
 
     def print_count(self) -> None:
-        print(f'Filename: {self.filename}\t\t: {self.word_count}')
+        rows = [(self.filename, self.word_count, self.line_count)]
+        print_table(rows, headers=("Filename", "Words", "Lines"))
 
     def __enter__(self):
         return self
@@ -62,19 +63,9 @@ class MultiFileHandler:
 
     def print_collection(self) -> None:
         counts = self._combined_counter()
-
-        if not counts:
-            print("No words found.")
-            return
-
-        max_key_len = max(len(word) for word in counts)
-        header = f"{'WORD'.ljust(max_key_len)} | COUNT"
-        print(header)
-        print("-" * len(header))
-
-        for word, cnt in counts.most_common():
-            print(f"{word.ljust(max_key_len)} | {cnt}")
-
+        rows = [(word, count) for word, count in counts.most_common()]
+        print_table(rows, headers=("Word", "Count"))
+        
     def print_count(self) -> None:
-        for filename in self.files:
-            print(f"{'Filename: ' + filename.filename:<40} : {filename.word_count}")
+        rows = [(fh.filename, fh.word_count, fh.line_count) for fh in self.files]
+        print_table(rows, headers=("Filename", "Words", "Lines"))

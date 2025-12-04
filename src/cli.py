@@ -11,15 +11,15 @@ def _is_dir(filenames: tuple[str]):
 
 def wc_files(filenames: tuple[str], len_files: int, collection: bool):
     if len_files == 1:
-        f = FileHandler(filename=filenames[0])
-        f.print_count()
-        if collection:
-            f.print_collection()
+        handler = FileHandler(filename=filenames[0])
     else:
-         f = MultiFileHandler(filenames=filenames)
-         f.print_count()
-         if collection:
-              f.print_collection()
+        handler = MultiFileHandler(filenames=filenames)
+
+    handler.print_count()
+
+    if collection:
+        handler.print_collection()
+
 
 @click.command()
 @click.argument("filenames", nargs=-1)
