@@ -1,71 +1,85 @@
 import re
 from collections import Counter
 from .lib import print_table
+from pathlib import Path
 
 class FileHandler:
-    def __init__(self, filename: str) -> None:
+    WORD_RE = re.compile(r"[A-Za-z]+") 
+
+    def __init__(self, filename: str):
         if not filename:
-            raise ValueError("Error: Filename is required")
+            raise ValueError("Filename is required")
+
+        path = Path(filename)
+        if not path.exists():
+            raise FileNotFoundError(f"File not found: {filename}")
 
         self.filename = filename
-        self.file = open(filename, "r")
-        self.word_count = self.__get_word_count()
-        self.line_count = self.__get_line_count()
-        self.word_counter = self.__get_word_counter()
 
-    def __get_word_counter(self) -> Counter:
-        self.file.seek(0)
-        words = []
-        for line in self.file:
-            words.extend(re.findall(r"[A-Za-z]+", line))
-        return Counter(words)
-    
-    def __get_word_count(self) -> int:
-        self.file.seek(0)                
-        count = 0
-        for line in self.file:
-            count += len(re.findall(r"[A-Za-z]+", line))
-        self.file.seek(0)                 
-        return count
-    
-    def __get_line_count(self) -> int:
-        self.file.seek(0)
-        return len(self.file.readlines())
+        self.text = path.read_text()
 
-    def print_collection(self) -> None: 
-        counts = self.word_counter
-        rows = [(word, count) for word, count in counts.most_common()]
+        self.lines = self.text.splitlines()
+
+        self._words = None
+        self._word_count = None
+        self._line_count = None
+        self._counter = None
+
+    def _extract_words(self):
+        return self.WORD_RE.findall(self.text)
+
+    @property
+    def words(self):
+        if self._words is None:
+            self._words = self._extract_words()
+        return self._words
+
+    @property
+    def word_count(self):
+        if self._word_count is None:
+            self._word_count = len(self.words)
+        return self._word_count
+
+    @property
+    def line_count(self):
+        if self._line_count is None:
+            self._line_count = len(self.lines)
+        return self._line_count
+
+    @property
+    def word_counter(self):
+        if self._counter is None:
+            normalized = (w.lower() for w in self.words)
+            self._counter = Counter(normalized)
+        return self._counter
+
+    def print_collection(self):
+        rows = [(word, count) for word, count in self.word_counter.most_common()]
         print_table(rows, headers=("Word", "Count"))
 
-
-
-    def print_count(self) -> None:
+    def print_count(self):
         rows = [(self.filename, self.word_count, self.line_count)]
         print_table(rows, headers=("Filename", "Words", "Lines"))
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc, tb):
-        self.file.close()
-
 
 class MultiFileHandler:
-    def __init__(self, filenames: tuple[str]) -> None:
-        self.filenames = filenames
-        self.files = [FileHandler(filename) for filename in self.filenames]
-    
-    def _combined_counter(self) -> Counter:
+    def __init__(self, filenames: tuple[str]):
+        self.files = [FileHandler(fn) for fn in filenames]
+
+    def _combined_counter(self):
         total = Counter()
         for fh in self.files:
-            total += fh.word_counter
+            total.update(fh.word_counter)
         return total
 
-    def print_collection(self) -> None:
-        counts = self._combined_counter()
-        rows = [(word, count) for word, count in counts.most_common()]
+    def print_collection(self):
+        counter = self._combined_counter()
+        rows = [(word, count) for word, count in counter.most_common()]
         print_table(rows, headers=("Word", "Count"))
-        
-    def print_count(self) -> None:
-        rows = [(fh.filename, fh.word_count, fh.line_count) for fh in self.files]
+
+    def print_count(self):
+        rows = [
+            (fh.filename, fh.word_count, fh.line_count)
+            for fh in self.files
+        ]
         print_table(rows, headers=("Filename", "Words", "Lines"))
