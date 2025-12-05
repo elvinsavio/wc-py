@@ -3,8 +3,9 @@ from collections import Counter
 from .lib import print_table
 from pathlib import Path
 
+
 class FileHandler:
-    WORD_RE = re.compile(r"[A-Za-z]+") 
+    WORD_RE = re.compile(r"[A-Za-z]+")
 
     def __init__(self, filename: str):
         if not filename:
@@ -57,9 +58,16 @@ class FileHandler:
         rows = [(word, count) for word, count in self.word_counter.most_common()]
         print_table(rows, headers=("Word", "Count"))
 
-    def print_count(self):
-        rows = [(self.filename, self.word_count, self.line_count)]
-        print_table(rows, headers=("Filename", "Words", "Lines"))
+    def print_count(self, word_only: bool = True, line_only: bool = True):
+        rows = (self.filename,)
+        header = ("Filename",)
+        if word_only:
+            rows += (self.word_count,)
+            header += ("Words",)
+        if line_only:
+            rows += (self.line_count,)
+            header += ("Lines",)
+        print_table([rows], headers=header)
 
 
 class MultiFileHandler:
@@ -77,9 +85,10 @@ class MultiFileHandler:
         rows = [(word, count) for word, count in counter.most_common()]
         print_table(rows, headers=("Word", "Count"))
 
-    def print_count(self):
-        rows = [
-            (fh.filename, fh.word_count, fh.line_count)
-            for fh in self.files
-        ]
+    def print_count(self, word_only: bool = True, line_only: bool = True):
+        rows = [(fh.filename, fh.word_count, fh.line_count) for fh in self.files]
         print_table(rows, headers=("Filename", "Words", "Lines"))
+
+
+class FolderHandler:
+    def __init__(self, pathname: str): ...
