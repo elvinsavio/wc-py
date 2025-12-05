@@ -15,11 +15,11 @@ def wc_files(filenames: tuple[str], len_files: int, collection: bool):
     else:
         handler = MultiFileHandler(filenames=filenames)
 
-    handler.print_count()
 
     if collection:
         handler.print_collection()
-
+    else:     
+        handler.print_count()
 
 @click.command()
 @click.argument("filenames", nargs=-1)
