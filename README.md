@@ -147,5 +147,12 @@ wc src/
   * More than one directory is supplied
 * Prints warnings for incompatible options
 
-```
-```
+
+## Future Plan
+
+- [ ] Ignore flag '-i <./dir/.gitignore>'
+- [ ] Replace Dictory scanning with '-r'
+- [ ] Extenstion 'py'
+- [ ] Include '*.py'
+- [ ] Exclude '*.pyc'
+- [ ] Sorting
