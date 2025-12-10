@@ -1,5 +1,5 @@
 import click
-from .file_handler import FileHandler, MultiFileHandler
+from .file_handler import FileHandler, MultiFileHandler, FolderHandler
 import os
 import warnings
 
@@ -29,6 +29,19 @@ def wc_files(
     else:
         handler.print_count(word_only=word_only, line_only=line_only)
 
+def wc_folder(
+    filenames: str,
+    collection: bool,
+    word_only: bool,
+    line_only: bool,
+):
+    handler = FolderHandler(filenames)
+
+    if collection:
+        handler.print_collection()
+        warnings.warn("Cannot use -w or -l with -c")
+    else:
+        handler.print_count(word_only=word_only, line_only=line_only)
 
 @click.command()
 @click.argument("filenames", nargs=-1)
@@ -66,3 +79,11 @@ def wc(
             word_only=word,
             line_only=line,
         )
+    else:
+        wc_folder(
+            filenames=filenames[0],
+            collection=collection,
+            word_only=word,
+            line_only=line
+        )
+
